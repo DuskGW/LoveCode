@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>世界第二,你第一咯!</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.6.7/dist/axios.min.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#8B5CF6',
+            secondary: '#EC4899',
+            pastel: {
+              pink: '#FFD1DC',
+              blue: '#C9E7F8',
+              yellow: '#FFF2CC',
+              green: '#D2F5D6',
+              purple: '#E6D9FF',
+              orange: '#FFE4CC',
+              cyan: '#CCFFEE'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+
+<body class="bg-gray-50 min-h-screen overflow-x-hidden">
+  <div id="image-carousel" class="fixed inset-0 z-10 opacity-30 pointer-events-none">
+    <div class="carousel-container relative w-full h-full"></div>
+  </div>
+
+  <div class="action-container hidden" id="action-container">
+    <button class="action-main-btn" id="action-main-btn" title="功能菜单">
+      <i class="fa fa-bars text-primary text-xl"></i>
+    </button>
+    <div class="action-sub-container" id="action-sub-container">
+      <button class="action-sub-btn" id="home-button" title="返回主页">
+        <i class="fa fa-home text-primary text-xl"></i>
+      </button>
+      <button class="action-sub-btn" id="author-button" title="开源地址">
+        <i class="fa fa-github text-primary text-xl"></i>
+      </button>
+      <button class="action-sub-btn" id="share-button" title="分享">
+        <i class="fa fa-share-alt text-primary text-xl"></i>
+      </button>
+      <button class="action-sub-btn" id="music-toggle" title="背景音乐">
+        <i class="fa fa-music text-primary text-xl"></i>
+      </button>
+    </div>
+  </div>
+
+  <audio id="background-music" loop preload="auto" volume="0.3">
+    <source src="https://music.163.com/song/media/outer/url?id=2671617146.mp3" type="audio/mpeg">
+  </audio>
+
+  <div id="control-panel" class="relative z-20">
+    <div id="step1" class="container mx-auto py-16 px-4">
+      <h1 class="text-[clamp(2rem,5vw,3rem)] font-bold text-center mb-8 text-gradient bg-gradient-to-r from-primary to-secondary">
+        选择一个开始
+      </h1>
+      <div class="flex flex-col gap-6 max-w-md mx-auto">
+        <button id="btn-self" class="bg-gradient-to-r from-orange-200 to-red-200 py-6 px-8 rounded-2xl shadow-lg flex items-center justify-center gap-3 hover:scale-105 transition-all">
+          <i class="fa fa-user text-pink-500 text-2xl"></i>
+          <span class="text-xl font-semibold">给自己</span>
+        </button>
+        <button id="btn-friend" class="bg-gradient-to-r from-cyan-200 to-purple-200 py-6 px-8 rounded-2xl shadow-lg flex items-center justify-center gap-3 hover:scale-105 transition-all">
+          <i class="fa fa-heart text-pink-500 text-2xl"></i>
+          <span class="text-xl font-semibold">给朋友</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="chat-panel" class="hidden fixed inset-0 z-40 bg-gray-100 flex flex-col">
+    <div class="chat-header bg-white shadow-sm px-4 py-3 flex items-center justify-between flex-shrink-0">
+      <button id="chat-back" class="flex items-center gap-2 text-gray-600 hover:text-gray-900">
+        <i class="fa fa-arrow-left"></i>
+        <span>返回</span>
+      </button>
+      <div class="flex items-center gap-2">
+        <img src="images/robot.gif" 
+             alt="LoveCode小助手" 
+             class="w-8 h-8 rounded-full object-cover">
+        <span class="font-medium">LoveCode小助手</span>
+      </div>
+      <div class="w-8"></div>
+    </div>
+    
+    <div id="chat-messages" class="flex-1 overflow-y-auto p-4">
+      <div class="bot-message">
+        <div class="flex gap-3">
+          <img src="images/robot.gif" 
+               alt="LoveCode小助手" 
+               class="w-8 h-8 rounded-full object-cover flex-shrink-0">
+          <div class="bg-white rounded-2xl rounded-tl-none px-4 py-3 shadow-sm max-w-[80%]">
+            <p id="chat-welcome">嗨~ 我是你的LoveCode小助手，让我来帮你创建一份特别的祝福吧！首先，我想知道你是要祝福谁呢？</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div id="chat-input-area" class="bg-white border-t px-4 py-3 flex-shrink-0">
+      <div id="chat-choices" class="flex flex-wrap gap-2 mb-3"></div>
+      <div class="flex gap-2">
+        <input 
+          type="text" 
+          id="chat-input" 
+          placeholder="输入你的回答..." 
+          class="flex-1 border border-gray-300 rounded-full px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
+          autocomplete="off"
+        >
+        <button id="chat-send" class="w-10 h-10 rounded-full bg-gradient-to-r from-primary to-secondary flex items-center justify-center text-white">
+          <i class="fa fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="play-area" class="fixed inset-0 z-30 hidden">
+    <div id="float-container" class="fixed inset-0 z-30 pointer-events-none"></div>
+  </div>
+
+  <div id="result-panel" class="hidden container mx-auto py-16 px-4 relative z-20">
+    <div class="max-w-md mx-auto bg-white p-8 rounded-2xl shadow-lg bubble-arrow text-center">
+      <h2 class="text-2xl font-bold mb-6">创建成功！</h2>
+      <p class="mb-6">点击下方按钮开始预览播放，或分享给朋友</p>
+      <div class="mb-6">
+        <button id="start-play" class="w-full btn-primary mb-4">
+          <i class="fa fa-play mr-2"></i>开始预览播放
+        </button>
+        <button id="generate-share" class="w-full bg-purple-500 hover:bg-purple-600 text-white py-3 rounded-lg transition-colors">
+          <i class="fa fa-share-alt mr-2"></i>生成分享链接
+        </button>
+      </div>
+      <div class="p-4 bg-gray-100 rounded-lg mb-4 hidden" id="share-link-container">
+        <div class="flex items-center">
+          <input type="text" id="share-link" readonly class="flex-1 bg-transparent border-none text-sm p-0 focus:ring-0" />
+          <button id="copy-link" class="ml-2 px-3 py-1 bg-blue-500 text-white text-sm rounded hover:bg-blue-600 transition-colors">
+            复制分享链接
+          </button>
+        </div>
+      </div>
+      <button id="restart-btn" class="text-blue-500 hover:underline">重新创建</button>
+    </div>
+  </div>
+
+  <div id="loading-overlay" class="loading-overlay hidden">
+    <div class="flex flex-col items-center gap-3">
+      <div class="loader"></div>
+      <span>加载中...</span>
+    </div>
+  </div>
+
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>
